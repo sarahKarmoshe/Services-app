@@ -33,7 +33,7 @@ class ServiceController extends Controller
             ->where('date', '<', $now)->delete();
 
         //note: here notice that groupBy method before get method acts as a Query Builder method while after get method acts as a Collection method
-        $services = Service::query()->where('IsActive', '=', true)->get()
+        $services["services"] = Service::query()->where('IsActive', '=', true)->get()
             ->groupBy('street');
 
         return response()->json($services, Response::HTTP_OK);
@@ -51,7 +51,7 @@ class ServiceController extends Controller
         $services = Service::query()->create([
             'name' => $request->name,
             'street' => $request->street,
-            'IsActive' => $request->IsActive,
+            'IsActive' => true,
         ]);
         return response()->json($services, Response::HTTP_CREATED);
     }
@@ -75,6 +75,15 @@ class ServiceController extends Controller
         }
 
         return response()->json($state, Response::HTTP_OK);
+    }
+
+    public function deleteService(Service $service): JsonResponse  //this for admin
+    {
+       // $service->delete();
+
+        return response()->json('product deleted successfully', Response::HTTP_OK);
+
+
     }
 
 }

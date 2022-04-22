@@ -17,8 +17,19 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserController extends Controller
 {
+
+    public function DeleteUnVerifiedAccounts(){
+    $now=Carbon::now();
+    $sub=$now->addHour(-24);
+    User::query()->where('email_verified_at','=','Null')
+        ->where('created_at','<',$sub)->delete();
+
+    }
+
     public function signUp(Request $request): \Illuminate\Http\JsonResponse
     {
+        $this->DeleteUnVerifiedAccounts();
+
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string'],
             'email' => ['required', 'email', Rule::unique('users')],
@@ -42,13 +53,41 @@ class UserController extends Controller
 
         ]);
 
+        $verification_code = substr(number_format(rand(), 0, '', ''), 0, 6);
+        $user->sendApiEmailVerificationNotification($verification_code);
+
 
         $tokenResult = $user->createToken('personal Access Token')->accessToken;
         $data["user"] = $user;
+        $data["verification_code"] = $verification_code;
+        $data['IsAdmin']=false;
         $data["tokenType"] = 'Bearer';
         $data["access_token"] = $tokenResult;
 
         return response()->json($data, Response::HTTP_CREATED);
+
+    }
+
+    public function verify(Request $request) {
+
+        $userID = $request->id;
+        $user = User::findOrFail($userID);
+        $date = date("Y-m-d g:i:s");
+        $user->email_verified_at = $date;
+        $user->save();
+
+        return response()->json("Email verified!" ,Response::HTTP_OK);
+    }
+
+    public function resend(Request $request){
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json("User already have verified email!", 422);
+        }
+
+        $verification_code = substr(number_format(  rand(), 0, '', ''), 0, 6);
+        $request->user()->sendEmailVerificationNotification($verification_code);
+
+        return response()->json("The notification has been resubmitted");
 
     }
 
@@ -76,6 +115,7 @@ class UserController extends Controller
         $user = $request->user();
         $tokenResult = $user->createToken('personal Access Token')->accessToken;
         $data['user'] = $user;
+        $data['IsAdmin']=false;
         $data["TokenType"] = 'Bearer';
         $data['Token'] = $tokenResult;
 
@@ -85,14 +125,23 @@ class UserController extends Controller
     public function logOut()
     {
         Auth::user()->token()->revoke();
-
         return response()->json("logged out", Response::HTTP_OK);
 
     }
 
+    public function ResetPasswordRequest(){
+        $user=Auth::user();
+        $verification_code = substr(number_format(rand(), 0, '', ''), 0, 6);
+        $user->sendEmailVerificationPassword($verification_code);
+
+        $response['reset password code']=$verification_code;
+        return response()->json($response,Response::HTTP_OK);
+
+    }
+
+
     public function ResetPassword(Request $request): \Illuminate\Http\JsonResponse
     {
-
         $validator = Validator::make($request->all(), [
             'password' => ['required', 'min:8'],
             'c_password' => ['required', 'min:8', 'same:password'],
@@ -101,11 +150,12 @@ class UserController extends Controller
             return response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $request['password'] = Hash::make($request['password']);
+            $request['password'] = Hash::make($request['password']);
 
         Auth::user()->update([
             'password' => $request->password,
         ]);
+
         return response()->json("password reset has done successfully !", Response::HTTP_OK);
     }
 

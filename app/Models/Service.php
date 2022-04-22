@@ -20,8 +20,10 @@ class Service extends Model
     {
         return $this->hasMany(Reservation::class, 'service_id');
     }
-    public function staffReservations(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(Reservation::class, 'service_id');
-    }
+
+//    public function staffReservations(): \Illuminate\Database\Eloquent\Relations\HasMany
+//    {
+//        return $this->hasMany(Reservation::class, 'service_id');
+//    }
+
 }

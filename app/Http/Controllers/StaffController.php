@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Staff;
 use App\Http\Requests\StoreStaffRequest;
-use App\Http\Requests\UpdateStaffRequest;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 

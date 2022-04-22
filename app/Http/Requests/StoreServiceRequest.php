@@ -26,7 +26,6 @@ class StoreServiceRequest extends FormRequest
         return [
             'name'=>['required'],
             'street'=>['required'],
-            'IsActive'=>['required'],
         ];
     }
 }

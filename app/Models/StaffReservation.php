@@ -19,10 +19,10 @@ class StaffReservation extends Model
     ];
 
 
-    public function service(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Service::class);
-    }
+//    public function service(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+//    {
+//        return $this->belongsTo(Service::class);
+//    }
     public function staff(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Staff::class);

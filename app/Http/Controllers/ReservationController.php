@@ -25,10 +25,10 @@ class ReservationController extends Controller
         // delete expired reservations
         $now = Carbon::now();
         Reservation::query()->where('end_time', '<', $now)
-                            ->where('date','<',$now)->delete();
+            ->where('date', '<', $now)->delete();
 
         StaffReservation::query()->where('end_time', '<', $now)
-            ->where('date','<',$now)->delete();
+            ->where('date', '<', $now)->delete();
 
         $reservation = Reservation::query()->get();
         return response()->json($reservation, Response::HTTP_OK);
@@ -54,36 +54,34 @@ class ReservationController extends Controller
             'service_id' => $request->service_id,
             'start_time' => $request->start_time,
             'end_time' => $end_time,
-            'date'=>$end_time,
+            'date' => $end_time,
             'Gate_name' => $request->Gate_name,
         ]);
 
 
- // reserve the Gate with service
-        $service=Service::query()->where('name','=',$request->Gate_name)->get();
+        // reserve the Gate with service
+        $service = Service::query()->where('name', '=', $request->Gate_name)->get();
         Reservation::query()->create([
             'user_id' => Auth::id(),
             'service_id' => $service->id,
             'start_time' => $request->start_time,
             'end_time' => $end_time,
-            'date'=>$end_time,
+            'date' => $end_time,
             'Gate_name' => $request->Gate_name,
         ]);
 
 
+        //staff reservation pending until updae
+//        foreach ($request->staffs_id as $item) {
+//            StaffReservation::query()->create([
+//                'staff_id' => $item,
+//                'service_id' => $request->service_id,
+//                'start_time' => $request->start_time,
+//                'date' => $end_time,
+//                'end_time' => $end_time,
+//            ]);
+//        }
 
-//staff reservation
-        foreach ($request->staffs_id as $item) {
-
-            StaffReservation::query()->create([
-                'staff_id' => $item,
-                'service_id' => $request->service_id,
-                'start_time' => $request->start_time,
-                'date'=>$end_time,
-                'end_time' => $end_time,
-            ]);
-
-        }
         //detect if service is a street or not
         $service = Service::query()->find($request->service_id);
         if ($service->name == 'WoodWard') {
@@ -93,7 +91,7 @@ class ReservationController extends Controller
                     'service_id' => $i, //Gate
                     'start_time' => $request->start_time,
                     'end_time' => $end_time,
-                    'date'=>$end_time,
+                    'date' => $end_time,
                     'Gate_name' => $request->Gate_name,
                 ]);
             }
@@ -105,7 +103,7 @@ class ReservationController extends Controller
                     'service_id' => $i, //Gate
                     'start_time' => $request->start_time,
                     'end_time' => $end_time,
-                    'date'=>$end_time,
+                    'date' => $end_time,
                     'Gate_name' => $request->Gate_name,
                 ]);
             }
@@ -134,16 +132,15 @@ class ReservationController extends Controller
             'service_id' => $request->service_id,
             'start_time' => $request->start_time,
             'end_time' => $end_time,
-            'date'=>$end_time,
+            'date' => $end_time,
             'Gate_name' => $request->Gate_name,
         ]);
-        foreach ($request->staffs_id as $item)
-        {
+        foreach ($request->staffs_id as $item) {
             StaffReservation::query()->create([
                 'staff_id' => $item,
                 'service_id' => $request->service_id,
                 'start_time' => $request->start_time,
-                'date'=>$end_time,
+                'date' => $end_time,
                 'end_time' => $end_time,
             ]);
         }
@@ -156,7 +153,7 @@ class ReservationController extends Controller
                     'service_id' => $i, //Gate
                     'start_time' => $request->start_time,
                     'end_time' => $end_time,
-                    'date'=>$end_time,
+                    'date' => $end_time,
                     'Gate_name' => $request->Gate_name,
                 ]);
             }
@@ -168,7 +165,7 @@ class ReservationController extends Controller
                     'service_id' => $i, //Gate
                     'start_time' => $request->start_time,
                     'end_time' => $end_time,
-                    'date'=>$end_time,
+                    'date' => $end_time,
                     'Gate_name' => $request->Gate_name,
                 ]);
             }

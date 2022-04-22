@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin;
-use App\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +17,7 @@ class AdminController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string'],
-            'email' => ['required', 'email', Rule::unique('users')],
+            'email' => ['required', 'email', Rule::unique('admins')],
             'password' => ['required', 'min:8'],
             'c_password' => ['required', 'same:password'],
             'phone' => ['required', 'string'],
@@ -39,9 +38,9 @@ class AdminController extends Controller
 
         ]);
 
-
         $tokenResult = $admin->createToken('personal Access Token')->accessToken;
         $data["user"] = $admin;
+        $data['IsAdmin']=true;
         $data["tokenType"] = 'Bearer';
         $data["access_token"] = $tokenResult;
 
@@ -49,9 +48,11 @@ class AdminController extends Controller
 
     }
 
+
     /**
      * @throws AuthenticationException
      */
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(),
@@ -74,6 +75,7 @@ class AdminController extends Controller
 
             $tokenResult = $admin->createToken('personal Access Token')->accessToken;
             $data['admin'] = $admin;
+            $data['IsAdmin']=true;
             $data["TokenType"] = 'Bearer';
             $data['Token'] = $tokenResult;
         }
@@ -81,11 +83,6 @@ class AdminController extends Controller
             throw new AuthenticationException();
 
         }
-//            if (!Auth('admin')->attempt($credentials)) {
-//            throw new AuthenticationException();
-//        }
-
-        //$admin = $request->user();
 
         return response()->json($data, Response::HTTP_OK);
     }
@@ -97,6 +94,19 @@ class AdminController extends Controller
         return response()->json("logged out", Response::HTTP_OK);
 
     }
+
+    public function ResetPasswordRequest(){
+        config(['auth.guards.api.provider' => 'admin']);
+
+        $admin = Admin::find(Auth::guard('admin-api')->id());
+
+        $verification_code = substr(number_format(rand(), 0, '', ''), 0, 6);
+        $admin->sendEmailVerificationPasswordAdmin($verification_code);
+
+        $response['reset password code']=$verification_code;
+        return response()->json($response,Response::HTTP_OK);
+    }
+
 
     public function ResetPassword(Request $request): \Illuminate\Http\JsonResponse
     {

@@ -23,7 +23,12 @@ Route::post('signup', [UserController::class, 'signUp']);
 Route::post('login', [UserController::class, 'login']);
 
 Route::middleware(['auth:api'])->group(function () {
+    Route::get("email/verify", [UserController::class, "verify"])->name("verificationapi.verify");
+    Route::get("email/resend", [UserController::class, "resend"])->name("verificationapi.resend");
+
+
     Route::get('logout', [UserController::class, 'logOut']);
+    Route::get('ResetPasswordRequest', [UserController::class, 'ResetPasswordRequest']);
     Route::post('ResetPassword', [UserController::class, 'ResetPassword']);
 
     Route::get('services', [ServiceController::class, 'index']);
@@ -35,11 +40,9 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('/{reservation}', [ReservationController::class, 'destroy']);
     });
 
-    Route::get('Staff',[StaffController::class,'index']);
+    Route::get('Staff', [StaffController::class, 'index']);
 
 });
-
-
 
 
 Route::post('Admin/signup', [AdminController::class, 'signUp']);
@@ -47,18 +50,20 @@ Route::post('Admin/login', [AdminController::class, 'login']);
 
 Route::middleware(['auth:admin-api'])->group(function () {
     Route::prefix('Admin')->group(function () {
+        Route::get('services', [ServiceController::class, 'index']);
         Route::post('AddService', [ServiceController::class, 'store']);
+        Route::delete('DeleteService', [ServiceController::class, 'deleteService']);
+
         Route::get('BlockServices/{service}', [ServiceController::class, 'BlockService']);
         Route::get('Reservation', [ReservationController::class, 'index']);
         Route::get('AcceptReservation/{reservation}', [ReservationController::class, 'AcceptReservation']);
         Route::delete('DeleteReservation/{reservation}', [ReservationController::class, 'DestroyByAdmin']);
-        Route::post('Staff',[StaffController::class,'store']);
-        Route::delete('Staff/{staff}',[StaffController::class,'destroy']);
-
+        Route::post('Staff', [StaffController::class, 'store']);
+        Route::delete('Staff/{staff}', [StaffController::class, 'destroy']);
 
         Route::get('/logout', [AdminController::class, 'logOut']);
+        Route::get('/ResetPasswordRequest', [AdminController::class, 'ResetPasswordRequest']);
         Route::post('/ResetPassword', [AdminController::class, 'ResetPassword']);
-
 
     });
 
