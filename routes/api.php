@@ -32,6 +32,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('logout', [UserController::class, 'logOut']);
     Route::get('ResetPasswordRequest', [UserController::class, 'ResetPasswordRequest']);
     Route::post('ResetPassword', [UserController::class, 'ResetPassword']);
+    Route::post("/emailUpdate", [UserController::class, "emailUpdate"]);
+
 
 
     Route::get('services', [ServiceController::class, 'index']);
@@ -68,6 +70,8 @@ Route::middleware(['auth:admin-api'])->group(function () {
         Route::get('/ResetPasswordRequest', [AdminController::class, 'ResetPasswordRequest']);
         Route::post('/ResetPassword', [AdminController::class, 'ResetPassword']);
         Route::post("/ProfileUpdate", [AdminController::class, "ProfileUpdate"]);
+        Route::post("/emailUpdate", [AdminController::class, "emailUpdate"]);
+        Route::post("/AddAdmin", [AdminController::class, "AddAdmin"]);
 
 
     });

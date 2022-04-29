@@ -131,19 +131,68 @@ class AdminController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required','string'],
-            'email' => ['required', 'email'],
             'phone' => ['required', 'string'],
         ]);
         if ($validator->fails()) {
             return Response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        Auth::user()->update([
+
+        Auth::guard('admin-api')->user()->update([
             'name'=>$request->name,
-            'email'=>$request->email,
             'phone'=>$request->phone,
         ]);
-        $admin= Admin::find(Auth::guard('admin-api')->id())->get();
+
+         $admin= Admin::query()->where('id','=',Auth::guard('admin-api')->id())->get();
 
         return response()->json($admin,Response::HTTP_OK);
+    }
+
+
+
+    public function emailUpdate(Request $request){
+        if(Auth::guard('api')){
+            return true;
+
+        }
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email',Rule::unique('admins')],
+        ]);
+        if ($validator->fails()) {
+            return Response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        Auth::guard('admin-api')->user()->update([
+            'email'=>$request->email,
+        ]);
+
+        $admin= Admin::query()->where('id','=',Auth::guard('admin-api')->id())->get();
+
+        return response()->json($admin,Response::HTTP_OK);
+    }
+
+
+    public function AddAdmin(Request $request){
+
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email',Rule::unique('admins')],
+        ]);
+
+        if ($validator->fails()) {
+            return Response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $admin = Admin::query()->create([
+            'name' => "Admin",
+            'email' => $request->email,
+            'password' => "AdminAdmin",
+            'phone' => "**********",
+
+        ]);
+
+        $date = date("Y-m-d g:i:s");
+        $admin->email_verified_at = $date;
+        $admin->save();
+
+        return response()->json($admin,Response::HTTP_CREATED);
     }
 }

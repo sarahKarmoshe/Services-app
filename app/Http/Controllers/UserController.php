@@ -22,7 +22,7 @@ class UserController extends Controller
     {
         $now = Carbon::now();
         $sub = $now->addHour(-24);
-        User::query()->where('email_verified_at', '=', 'Null')
+        User::query()->where('email_verified_at', '=', 'NULL')
             ->where('created_at', '<', $sub)->delete();
 
     }
@@ -71,7 +71,7 @@ class UserController extends Controller
 
     public function verify()
     {
-        $user= Auth::user();
+        $user = Auth::user();
         $date = date("Y-m-d g:i:s");
         $user->email_verified_at = $date;
         $user->save();
@@ -89,6 +89,7 @@ class UserController extends Controller
 
         return response()->json("The notification has been resubmitted");
     }
+
     /**
      * @throws AuthenticationException
      */
@@ -179,22 +180,40 @@ class UserController extends Controller
     public function ProfileUpdate(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ['required','string'],
-            'email' => ['required', 'email'],
+            'name' => ['required', 'string'],
             'phone' => ['required', 'string'],
         ]);
         if ($validator->fails()) {
             return Response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-         Auth::user()->update([
-            'name'=>$request->name,
-            'email'=>$request->email,
-            'phone'=>$request->phone,
+        Auth::user()->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
         ]);
-        $user=User::query()->find(Auth::id())->get();
-        return response()->json($user,Response::HTTP_OK);
+        $user = User::query()->where('id', '=', Auth::id())->get();
+
+        return response()->json($user, Response::HTTP_OK);
     }
 
+    public function emailUpdate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+
+            'email' => ['required', 'email', Rule::unique('users')],
+        ]);
+
+        if ($validator->fails()) {
+            return Response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        Auth::user()->update([
+            'email' => $request->email,
+        ]);
+
+        $user = User::query()->where('id', '=', Auth::id())->get();
+
+        return response()->json($user, Response::HTTP_OK);
+    }
 
 }
