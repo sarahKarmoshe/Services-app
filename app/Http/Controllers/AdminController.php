@@ -120,10 +120,30 @@ class AdminController extends Controller
         }
 
         $request['password'] = Hash::make($request['password']);
-
-        Auth::user()->update([
+        $admin= Admin::find(Auth::guard('admin-api')->id())->get();
+        $admin->update([
             'password' => $request->password,
         ]);
         return response()->json("password reset has done successfully !", Response::HTTP_OK);
+    }
+
+    public function ProfileUpdate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => ['required','string'],
+            'email' => ['required', 'email'],
+            'phone' => ['required', 'string'],
+        ]);
+        if ($validator->fails()) {
+            return Response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        Auth::user()->update([
+            'name'=>$request->name,
+            'email'=>$request->email,
+            'phone'=>$request->phone,
+        ]);
+        $admin= Admin::find(Auth::guard('admin-api')->id())->get();
+
+        return response()->json($admin,Response::HTTP_OK);
     }
 }

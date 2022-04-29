@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\UnauthorizedException;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,11 +25,10 @@ class ReservationController extends Controller
     {
         // delete expired reservations
         $now = Carbon::now();
-        Reservation::query()->where('end_time', '<', $now)
-            ->where('date', '<', $now)->delete();
+        Reservation::query()->where('end_time', '<', $now)->delete();
 
-        StaffReservation::query()->where('end_time', '<', $now)
-            ->where('date', '<', $now)->delete();
+//        StaffReservation::query()->where('end_time', '<', $now)
+//            ->where('date', '<', $now)->delete();
 
         $reservation = Reservation::query()->get();
         return response()->json($reservation, Response::HTTP_OK);
@@ -44,34 +44,72 @@ class ReservationController extends Controller
 
     public function store(StoreReservationRequest $request): JsonResponse //this for user
     {
+        $IsGate = false;
+        $reservation = [];
+        foreach ($request->services_map as $item) {
+            $name = $item['name'];
+            $id = $item['id'];
+            $r = Reservation::query()->create([
+                'user_id' => Auth::id(),
+                'service_id' => $id,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'Gate_name' => $request->Gate_name,
+            ]);
+            $reservation = Arr::prepend($reservation, $r);
+            if ($request->Gate_name == $name) {
+                $IsGate = true;
+            }
+        }
 
-        $start_time = Carbon::parse($request->start_time);
-        $end_time = $start_time->addMinute($request->period);
-        $end_time->setDate($request->year, $request->month, $request->day);
+        //detect if service is a street or not
 
-        $reservation = Reservation::query()->create([
-            'user_id' => Auth::id(),
-            'service_id' => $request->service_id,
-            'start_time' => $request->start_time,
-            'end_time' => $end_time,
-            'date' => $end_time,
-            'Gate_name' => $request->Gate_name,
-        ]);
-
-
-        // reserve the Gate with service
-        $service = Service::query()->where('name', '=', $request->Gate_name)->get();
-        Reservation::query()->create([
-            'user_id' => Auth::id(),
-            'service_id' => $service->id,
-            'start_time' => $request->start_time,
-            'end_time' => $end_time,
-            'date' => $end_time,
-            'Gate_name' => $request->Gate_name,
-        ]);
+        if ($request->StreetName == 'WoodWard') {
+            for ($i = 1; $i <= 2; $i++) {
+                $r = Reservation::query()->create([
+                    'user_id' => Auth::id(),
+                    'service_id' => $i, //Gate1,2
+                    'start_time' => $request->start_time,
+                    'end_time' => $request->end_time,
+                    'Gate_name' => $request->Gate_name,
+                ]);
+                $reservation = Arr::prepend($reservation, $r);
+                $IsGate = true;
 
 
-        //staff reservation pending until updae
+            }
+        }
+        if ($request->StreetName == 'Farmer') {
+            for ($i = 3; $i <= 4; $i++) {
+                $r = Reservation::query()->create([
+                    'user_id' => Auth::id(),
+                    'service_id' => $i, //Gate3,4
+                    'start_time' => $request->start_time,
+                    'end_time' => $request->end_time,
+                    'Gate_name' => $request->Gate_name,
+                ]);
+                $reservation = Arr::prepend($reservation, $r);
+                $IsGate = true;
+
+            }
+        }
+
+        // reserve the Gate with service if it hasn't been reserved yet
+
+        if (!$IsGate) {
+            $service = Service::query()->where('name', '=', $request->Gate_name)->get();
+            $r = Reservation::query()->create([
+                'user_id' => Auth::id(),
+                'service_id' => $service->first()->id,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'Gate_name' => $request->Gate_name,
+            ]);
+            $reservation = Arr::prepend($reservation, $r);
+
+        }
+
+        //staff reservation pending
 //        foreach ($request->staffs_id as $item) {
 //            StaffReservation::query()->create([
 //                'staff_id' => $item,
@@ -81,33 +119,6 @@ class ReservationController extends Controller
 //                'end_time' => $end_time,
 //            ]);
 //        }
-
-        //detect if service is a street or not
-        $service = Service::query()->find($request->service_id);
-        if ($service->name == 'WoodWard') {
-            for ($i = 1; $i <= 2; $i++) {
-                Reservation::query()->create([
-                    'user_id' => Auth::id(),
-                    'service_id' => $i, //Gate
-                    'start_time' => $request->start_time,
-                    'end_time' => $end_time,
-                    'date' => $end_time,
-                    'Gate_name' => $request->Gate_name,
-                ]);
-            }
-        }
-        if ($service->name == 'Farmer') {
-            for ($i = 3; $i <= 4; $i++) {
-                Reservation::query()->create([
-                    'user_id' => Auth::id(),
-                    'service_id' => $i, //Gate
-                    'start_time' => $request->start_time,
-                    'end_time' => $end_time,
-                    'date' => $end_time,
-                    'Gate_name' => $request->Gate_name,
-                ]);
-            }
-        }
 
 
         return response()->json($reservation, Response::HTTP_CREATED);
@@ -123,57 +134,26 @@ class ReservationController extends Controller
      */
     public function update(UpdateReservationRequest $request, Reservation $reservation): JsonResponse //this for user
     {
-        $start_time = Carbon::parse($request->start_time);
-        $end_time = $start_time->addMinute($request->period);
-        $end_time->setDate($request->year, $request->month, $request->day);
 
-        $reservation->query()->update([
-            'user_id' => Auth::id(),
-            'service_id' => $request->service_id,
-            'start_time' => $request->start_time,
-            'end_time' => $end_time,
-            'date' => $end_time,
-            'Gate_name' => $request->Gate_name,
-        ]);
-        foreach ($request->staffs_id as $item) {
-            StaffReservation::query()->create([
-                'staff_id' => $item,
+            $reservation->update([
+                'user_id' => Auth::id(),
                 'service_id' => $request->service_id,
                 'start_time' => $request->start_time,
-                'date' => $end_time,
-                'end_time' => $end_time,
+                'end_time' => $request->end_time,
+                'Gate_name' => $request->Gate_name,
             ]);
-        }
-        //detect if service is a street or not
-        $service = Service::query()->find($request->service_id);
-        if ($service->name == 'WoodWard') {
-            for ($i = 1; $i <= 2; $i++) {
-                Reservation::query()->create([
-                    'user_id' => Auth::id(),
-                    'service_id' => $i, //Gate
-                    'start_time' => $request->start_time,
-                    'end_time' => $end_time,
-                    'date' => $end_time,
-                    'Gate_name' => $request->Gate_name,
-                ]);
-            }
-        }
-        if ($service->name == 'Farmer') {
-            for ($i = 3; $i <= 4; $i++) {
-                Reservation::query()->create([
-                    'user_id' => Auth::id(),
-                    'service_id' => $i, //Gate
-                    'start_time' => $request->start_time,
-                    'end_time' => $end_time,
-                    'date' => $end_time,
-                    'Gate_name' => $request->Gate_name,
-                ]);
-            }
-        }
-
 
         return response()->json($reservation, Response::HTTP_OK);
 
+//        foreach ($request->staffs_id as $item) {
+//            StaffReservation::query()->create([
+//                'staff_id' => $item,
+//                'service_id' => $request->service_id,
+//                'start_time' => $request->start_time,
+//                'end_time' => $request->end_time,
+//
+//            ]);
+//        }
     }
 
     /**

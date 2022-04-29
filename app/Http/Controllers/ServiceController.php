@@ -14,6 +14,71 @@ use Symfony\Component\HttpFoundation\Response;
 class ServiceController extends Controller
 {
 
+    public function datainsert(){
+        $services = Service::query()->create([
+            'name' => 'Gate 1',
+            'street' => 'WoodWard',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'Gate 2',
+            'street' => 'WoodWard',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'Gate 3',
+            'street' => 'Farmer',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'Gate 4',
+            'street' => 'Farmer',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'Forklift 1',
+            'street' => 'BothStreet',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'Forklift 2',
+            'street' => 'BothStreet',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'BLK BuckHoist',
+            'street' => 'BothStreet',
+            'IsActive' => false,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'TWR BuckHoist',
+            'street' => 'BothStreet',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'Tower Crane 1',
+            'street' => 'BothStreet',
+            'IsActive' => true,
+        ]); $services = Service::query()->create([
+            'name' => 'Tower Crane 2',
+            'street' => 'BothStreet',
+            'IsActive' => true,
+        ]); $services = Service::query()->create([
+            'name' => 'Trailer Pump',
+            'street' => 'BothStreet',
+            'IsActive' => true,
+        ]);
+        $services = Service::query()->create([
+            'name' => 'Ramp-BSE',
+            'street' => 'BothStreet',
+            'IsActive' => true,
+        ]);
+        return \response("done");
+
+    }
+
+
+
 
     /**
      * Display a listing of the resource.
@@ -26,14 +91,13 @@ class ServiceController extends Controller
         // delete expired reservations
         $now = Carbon::now();
 
-        Reservation::query()->where('end_time', '<', $now)
-            ->where('date', '<', $now)->delete();
+        Reservation::query()->where('end_time', '<', $now)->delete();
 
-        StaffReservation::query()->where('end_time', '<', $now)
-            ->where('date', '<', $now)->delete();
+//        StaffReservation::query()->where('end_time', '<', $now)
+//            ->where('date', '<', $now)->delete();
 
         //note: here notice that groupBy method before get method acts as a Query Builder method while after get method acts as a Collection method
-        $services["services"] = Service::query()->where('IsActive', '=', true)->get()
+        $services["services"]= Service::query()->where('IsActive', '=', true)->get()
             ->groupBy('street');
 
         return response()->json($services, Response::HTTP_OK);

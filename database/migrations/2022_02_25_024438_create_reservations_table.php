@@ -17,9 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->date('date');
+            $table->date('start_time');
+            $table->date('end_time');
             $table->string('Gate_name')->nullable();
             $table->boolean('IsAccepted')->default(false);
             $table->timestamps();

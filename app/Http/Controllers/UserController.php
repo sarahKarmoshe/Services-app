@@ -18,11 +18,12 @@ use Symfony\Component\HttpFoundation\Response;
 class UserController extends Controller
 {
 
-    public function DeleteUnVerifiedAccounts(){
-    $now=Carbon::now();
-    $sub=$now->addHour(-24);
-    User::query()->where('email_verified_at','=','Null')
-        ->where('created_at','<',$sub)->delete();
+    public function DeleteUnVerifiedAccounts()
+    {
+        $now = Carbon::now();
+        $sub = $now->addHour(-24);
+        User::query()->where('email_verified_at', '=', 'Null')
+            ->where('created_at', '<', $sub)->delete();
 
     }
 
@@ -60,7 +61,7 @@ class UserController extends Controller
         $tokenResult = $user->createToken('personal Access Token')->accessToken;
         $data["user"] = $user;
         $data["verification_code"] = $verification_code;
-        $data['IsAdmin']=false;
+        $data['IsAdmin'] = false;
         $data["tokenType"] = 'Bearer';
         $data["access_token"] = $tokenResult;
 
@@ -68,29 +69,26 @@ class UserController extends Controller
 
     }
 
-    public function verify(Request $request) {
-
-        $userID = $request->id;
-        $user = User::findOrFail($userID);
+    public function verify()
+    {
+        $user= Auth::user();
         $date = date("Y-m-d g:i:s");
         $user->email_verified_at = $date;
         $user->save();
 
-        return response()->json("Email verified!" ,Response::HTTP_OK);
+        return response()->json("Email verified!", Response::HTTP_OK);
     }
 
-    public function resend(Request $request){
+    public function resend(Request $request)
+    {
         if ($request->user()->hasVerifiedEmail()) {
             return response()->json("User already have verified email!", 422);
         }
-
-        $verification_code = substr(number_format(  rand(), 0, '', ''), 0, 6);
+        $verification_code = substr(number_format(rand(), 0, '', ''), 0, 6);
         $request->user()->sendEmailVerificationNotification($verification_code);
 
         return response()->json("The notification has been resubmitted");
-
     }
-
     /**
      * @throws AuthenticationException
      */
@@ -115,7 +113,7 @@ class UserController extends Controller
         $user = $request->user();
         $tokenResult = $user->createToken('personal Access Token')->accessToken;
         $data['user'] = $user;
-        $data['IsAdmin']=false;
+        $data['IsAdmin'] = false;
         $data["TokenType"] = 'Bearer';
         $data['Token'] = $tokenResult;
 
@@ -129,13 +127,14 @@ class UserController extends Controller
 
     }
 
-    public function ResetPasswordRequest(){
-        $user=Auth::user();
+    public function ResetPasswordRequest()
+    {
+        $user = Auth::user();
         $verification_code = substr(number_format(rand(), 0, '', ''), 0, 6);
         $user->sendEmailVerificationPassword($verification_code);
 
-        $response['reset password code']=$verification_code;
-        return response()->json($response,Response::HTTP_OK);
+        $response['reset password code'] = $verification_code;
+        return response()->json($response, Response::HTTP_OK);
 
     }
 
@@ -150,7 +149,7 @@ class UserController extends Controller
             return response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-            $request['password'] = Hash::make($request['password']);
+        $request['password'] = Hash::make($request['password']);
 
         Auth::user()->update([
             'password' => $request->password,
@@ -163,11 +162,10 @@ class UserController extends Controller
     public function MyReservation() //this for user
     {
         $now = Carbon::now();
-        Reservation::query()->where('end_time', '<', $now)
-            ->where('date', '<', $now)->delete();
+        Reservation::query()->where('end_time', '<', $now)->delete();
 
-        StaffReservation::query()->where('end_time', '<', $now)
-            ->where('date', '<', $now)->delete();
+//        StaffReservation::query()->where('end_time', '<', $now)
+//            ->where('date', '<', $now)->delete();
 
 
         //get reservation and classificate it by accepted or pending
@@ -176,6 +174,26 @@ class UserController extends Controller
 
         return response()->json($reservation, Response::HTTP_OK);
 
+    }
+
+    public function ProfileUpdate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => ['required','string'],
+            'email' => ['required', 'email'],
+            'phone' => ['required', 'string'],
+        ]);
+        if ($validator->fails()) {
+            return Response()->json($validator->errors()->all(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+         Auth::user()->update([
+            'name'=>$request->name,
+            'email'=>$request->email,
+            'phone'=>$request->phone,
+        ]);
+        $user=User::query()->find(Auth::id())->get();
+        return response()->json($user,Response::HTTP_OK);
     }
 
 

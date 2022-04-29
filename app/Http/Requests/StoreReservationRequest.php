@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreReservationRequest extends FormRequest
 {
@@ -14,7 +15,11 @@ class StoreReservationRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        if(Auth::guard('api')){
+            return true;
+
+        }
+        return false;
     }
 
     /**
@@ -25,13 +30,11 @@ class StoreReservationRequest extends FormRequest
     public function rules()
     {
         return [
-            'service_id'=>['required','numeric'],
-            'year'=>['required'],
-            'month'=>['required'],
-            'day'=>['required'],
+            'services_map'=>['required'],
             'start_time'=>['required'],
-            'period'=>['required'],
-            'staffs_id'=>['required'],
+            'end_time'=>['required'],
+            'Gate_name'=>['required'],
+          //  'staffs_id'=>['required'],
         ];
     }
 }

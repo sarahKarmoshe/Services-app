@@ -30,12 +30,10 @@ class UpdateReservationRequest extends FormRequest
     {
         return [
             'service_id'=>['required','numeric'],
-            'year'=>['required'],
-            'month'=>['required'],
-            'day'=>['required'],
             'start_time'=>['required'],
-            'period'=>['required'],
+            'end_time'=>['required'],
             'Gate_name'=>['required'],
+            //  'staffs_id'=>['required'],
         ];
     }
 }

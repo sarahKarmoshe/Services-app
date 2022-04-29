@@ -16,11 +16,12 @@ class Reservation extends Model
         'service_id',
         'start_time',
         'end_time',
-        'date',
         'Gate_name',
         'IsAccepted'
     ];
 
+
+  //  protected $dateFormat = 'U';
 
     public function service()
     {
